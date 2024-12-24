@@ -50,6 +50,47 @@ const String tokenEndpoint = 'https://api.ouraring.com/oauth/token';
 const String redirectUri = 'ouraring://callback';
 ```
 
+### Platform-Specific Configuration
+
+#### iOS Configuration (Info.plist)
+Added URL scheme configuration to handle the OAuth callback:
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>ouraring</string>
+        </array>
+        <key>CFBundleURLName</key>
+        <string>com.example.ouraRingPoc</string>
+    </dict>
+</array>
+```
+
+#### Android Configuration (AndroidManifest.xml)
+Added queries for custom tabs support and browser view:
+```xml
+<queries>
+    <!-- For in-app browser support -->
+    <intent>
+        <action android:name="android.support.customtabs.action.CustomTabsService" />
+    </intent>
+</queries>
+```
+
+Also, ensure the activity has `android:launchMode="singleTop"` and `android:taskAffinity=""` for proper handling of the OAuth flow:
+```xml
+<activity
+    android:name=".MainActivity"
+    android:launchMode="singleTop"
+    android:taskAffinity=""
+    ...>
+```
+
+### Security Note
+The client ID and secret should be stored securely and not committed to version control. Consider using environment variables or a secure configuration management system in production.
+
 ## Getting Started
 
 1. Register your application with Oura Ring to obtain client credentials

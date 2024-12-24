@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:oauth2/oauth2.dart';
 import 'package:oura_ring_poc/auth_webview.dart';
@@ -16,13 +17,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Oura Ring Auth Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Oura Ring Auth Demo'),
     );
   }
 }
@@ -37,7 +38,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   StreamSubscription? _linkSubscription;
   Completer<Uri?>? _redirectCompleter;
 
@@ -61,13 +61,9 @@ class _MyHomePageState extends State<MyHomePage> {
         _redirectCompleter!.complete(uri);
       }
     }, onError: (err) {
-      print('Deep link error: $err');
-    });
-  }
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
+      if (kDebugMode) {
+        print('Deep link error: $err');
+      }
     });
   }
 
@@ -78,26 +74,25 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
+      body: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+          children: [
             const Text(
-              'You have pushed the button this many times:',
+              'Press the Home button to start the Oura OAuth flow',
+              textAlign: TextAlign.center,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            const SizedBox(height: 16.0),
+            ElevatedButton(
+                onPressed: () => authorizeWithOura().then((client) {
+                      if (kDebugMode) {
+                        print(client);
+                      }
+                    }),
+                child: const Icon(Icons.home))
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => authorizeWithOura().then((client) {
-          print(client);
-        }),
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -124,10 +119,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
       final Uri authorizationUrl = grant.getAuthorizationUrl(
         redirectUriUri,
+
+        // Add as required
         // scopes: ['daily', 'personal', 'heartrate'],
       );
-
-      log('Authorization URL: $authorizationUrl');
+      if (kDebugMode) log('Authorization URL: $authorizationUrl');
 
       final completer = Completer<String>();
 
@@ -144,10 +140,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
       final code = await completer.future;
       final client = await grant.handleAuthorizationCode(code);
-      log('Access Token: ${client.credentials.accessToken}');
+      if (kDebugMode) log('Access Token: ${client.credentials.accessToken}');
       return client;
     } catch (e, stackTrace) {
-      log('OAuth Error', error: e, stackTrace: stackTrace);
+      if (kDebugMode) log('OAuth Error', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
